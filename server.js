@@ -7,7 +7,7 @@ const root = path.join(__dirname, 'public');
 const port = Number(process.env.PORT || 3000);
 const securityCode = process.env.AMAP_SECURITY_CODE || '';
 const amapKey = process.env.AMAP_JS_API_KEY || '';
-const overseasHost = 'https://sg-restapi.opnavi.com';
+const amapWebService = 'https://restapi.amap.com';
 const mime = { '.html':'text/html; charset=utf-8', '.js':'text/javascript; charset=utf-8', '.css':'text/css; charset=utf-8', '.svg':'image/svg+xml' };
 
 http.createServer(async (req, res) => {
@@ -24,7 +24,7 @@ http.createServer(async (req, res) => {
     if (!/^\/(v3|v4|v5)\/[a-zA-Z0-9_./-]+$/.test(upstreamPath)) { res.writeHead(404); return res.end('Not found'); }
     const query = new URLSearchParams(url.searchParams); query.set('jscode', securityCode);
     try {
-      const upstream = await fetch(`${overseasHost}${upstreamPath}?${query}`, {headers:{accept:req.headers.accept || '*/*'}});
+      const upstream = await fetch(`${amapWebService}${upstreamPath}?${query}`, {headers:{accept:req.headers.accept || '*/*'}});
       res.writeHead(upstream.status, {'content-type':upstream.headers.get('content-type') || 'application/json; charset=utf-8','cache-control':'no-store','access-control-allow-origin':req.headers.origin || '*'});
       return res.end(Buffer.from(await upstream.arrayBuffer()));
     } catch { res.writeHead(502, {'content-type':'text/plain'}); return res.end('Map service unavailable'); }
@@ -36,4 +36,4 @@ http.createServer(async (req, res) => {
     if (err) { res.writeHead(404, {'content-type':'text/plain'}); return res.end('Not found'); }
     res.writeHead(200, {'content-type':mime[path.extname(file)] || 'application/octet-stream','x-content-type-options':'nosniff'}); res.end(body);
   });
-}).listen(port, '0.0.0.0', () => console.log(`Hong Kong food trip server listening on ${port}`));
+}).listen(port, '0.0.0.0', () => console.log(`Shanghai check-in server listening on ${port}`));
