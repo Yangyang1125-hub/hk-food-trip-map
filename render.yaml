@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: hk-food-trip-map
+    runtime: node
+    plan: free
+    buildCommand: npm install --omit=dev
+    startCommand: node server.js
+    healthCheckPath: /health
+    envVars:
+      - key: AMAP_JS_API_KEY
+        sync: false
+      - key: AMAP_SECURITY_CODE
+        sync: false
