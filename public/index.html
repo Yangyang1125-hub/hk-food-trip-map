@@ -24,20 +24,18 @@
     .welcome-card{border:0;border-radius:0;background:transparent;box-shadow:none;backdrop-filter:none}
     .mascot-window{position:relative;width:100%;height:380px;overflow:visible;justify-self:center}
     .welcome-mascot{position:absolute;left:calc(50% - 482px);top:-128px;width:660px;max-width:none;height:auto;margin:0;pointer-events:none;filter:none;animation:mascot-sway 3.2s ease-in-out infinite;transform-origin:50% 78%}
-    .welcome-kicker{margin:0 0 7px;color:#164a83;font-family:"Arial Rounded MT Bold","Yu Gothic UI","Meiryo",sans-serif;font-size:clamp(27px,4.2vw,40px);font-weight:900;letter-spacing:.08em;text-align:center;text-shadow:0 2px 0 white}
-    .top{position:relative;min-height:126px;align-items:flex-start;overflow:hidden}
+    .top{position:relative;min-height:160px;align-items:flex-start;overflow:hidden}
     .top-left{position:relative;z-index:2;display:flex;flex-direction:column;align-items:flex-start;gap:10px}
     .top-actions{justify-content:flex-start}
-    .map-mascot{position:absolute;z-index:1;top:-43px;right:4px;width:270px;height:auto;pointer-events:none}
+    .map-mascot{position:absolute;z-index:1;top:-72px;right:4px;width:300px;height:auto;pointer-events:none}
     .destination-form label{display:none}
-    @media(max-width:650px){.welcome-card{grid-template-rows:auto 260px}.mascot-window{height:260px}.welcome-mascot{left:calc(50% - 401px);top:-137px;width:550px}.welcome-kicker{margin-bottom:2px;font-size:30px}.top{min-height:104px}.top-left{gap:7px}.map-mascot{top:-35px;right:-28px;width:205px}.brand{font-size:15px}.logo{width:36px;height:36px}.top-actions{gap:5px}.top-actions .button{font-size:10px;padding:7px 9px}}
+    @media(max-width:650px){.welcome-card{grid-template-rows:auto 260px}.mascot-window{height:260px}.welcome-mascot{left:calc(50% - 401px);top:-137px;width:550px}.top{min-height:130px}.top-left{gap:7px}.map-mascot{top:-58px;right:-12px;width:250px}.brand{font-size:15px}.logo{width:36px;height:36px}.top-actions{gap:5px}.top-actions .button{font-size:10px;padding:7px 9px}}
   </style>
 </head>
 <body>
   <section class="welcome-screen" id="welcomeScreen" aria-label="输入目的地">
     <div class="welcome-card">
       <div class="welcome-dialogs">
-        <h1 class="welcome-kicker">上海へ行こう！</h1>
         <div class="speech"><div class="speech-label">泥要去哪里鸭？</div></div>
         <form class="destination-form" id="destinationForm">
           <input id="destinationInput" name="destination" aria-label="这次想去的地方" placeholder="比如：上海" autocomplete="off" required>
@@ -75,7 +73,7 @@
     function validShanghai(p){return Number.isFinite(+p.lon)&&Number.isFinite(+p.lat)&&+p.lon>120&&+p.lon<123&&+p.lat>30&&+p.lat<32}
     function getPoint(p){const loc=p?.location;if(!loc)return{};if(typeof loc.getLng==='function')return{lon:loc.getLng(),lat:loc.getLat()};return{lon:Number(loc.lng??loc[0]),lat:Number(loc.lat??loc[1])}}
     function save(){localStorage.setItem(STORAGE_KEY,JSON.stringify(places));renderSavedList()}
-    function load(){try{const match=location.hash.match(/trip=([^&]+)/),source=match?JSON.parse(decodeURIComponent(escape(atob(match[1])))):JSON.parse(localStorage.getItem(STORAGE_KEY)||localStorage.getItem('hk-food-trip-2026')||'[]');places=(Array.isArray(source)?source:[]).filter(validShanghai).map(p=>({id:p.id||crypto.randomUUID(),poiId:p.poiId||'',name:p.name||'地点',address:p.address||'上海',category:p.category||'地点',note:p.note||'',lon:+p.lon,lat:+p.lat}));if(match)localStorage.setItem(STORAGE_KEY,JSON.stringify(places))}catch{places=[]}}
+    function load(){try{const source=JSON.parse(localStorage.getItem(STORAGE_KEY)||localStorage.getItem('hk-food-trip-2026')||'[]');places=(Array.isArray(source)?source:[]).filter(validShanghai).map(p=>({id:p.id||crypto.randomUUID(),poiId:p.poiId||'',name:p.name||'地点',address:p.address||'上海',category:p.category||'地点',note:p.note||'',lon:+p.lon,lat:+p.lat}))}catch{places=[]}}
     function mapPlugin(name){if(typeof AMap[name.split('.').pop()]==='function')return Promise.resolve();return new Promise((resolve,reject)=>{let settled=false;const timer=setTimeout(()=>{if(!settled){settled=true;reject(new Error(`${name}加载超时`))}},15000);AMap.plugin([name],()=>{if(settled)return;settled=true;clearTimeout(timer);typeof AMap[name.split('.').pop()]==='function'?resolve():reject(new Error(`${name}未能加载`))})})}
     async function ensurePlaceSearch(){if(placeSearch)return placeSearch;if(!placeSearchPromise)placeSearchPromise=mapPlugin('AMap.PlaceSearch').then(()=>{placeSearch=new AMap.PlaceSearch({city:'上海市',citylimit:true,pageSize:10,extensions:'all',autoFitView:false});return placeSearch});return placeSearchPromise}
     function initMap(){map=new AMap.Map('map',{zoom:12,center:SHANGHAI,viewMode:'2D',mapStyle:'amap://styles/normal'});AMap.plugin('AMap.ToolBar',()=>{if(AMap.ToolBar)map.addControl(new AMap.ToolBar({position:'RB'}))});map.on('click',e=>{if(!pickOnMap)return;pickOnMap=false;map.getContainer().classList.remove('pick-mode');const pos=e.lnglat;openEdit({name:'',address:'',category:'地点',note:'',lon:pos.getLng(),lat:pos.getLat()})});ensurePlaceSearch().then(()=>{$('searchHint').textContent='输入地点并搜索，选择结果后可收藏，也可以直接规划导航。'}).catch(error=>{$('searchHint').textContent='地点搜索暂时没有加载成功，请刷新页面重试。';console.error(error)});renderSavedList();renderMarkers(true)}
@@ -109,7 +107,7 @@
     function renderRoadRoute(result,mode,origin,destination){const route=result.routes?.[0];if(!route){$('routeMeta').textContent='没有找到可用路线。';return}const steps=route.steps||[];$('routeTitle').textContent=`${origin.name} → ${destination.name}`;$('routeMeta').textContent=`${mode==='walking'?'步行':'驾车'} · ${dist(route.distance)} · ${timeText(route.time)} · ${steps.length} 段`;$('routeSteps').innerHTML=steps.map((step,i)=>`<li class="route-step"><span class="step-num">${i+1}</span>${safe(step.instruction||step.action||step.road||`继续前行 ${dist(step.distance)}`)}${step.distance?` <span style="color:#8195b2">${dist(step.distance)}</span>`:''}</li>`).join('')||'<li class="route-step">路线已显示在地图上。</li>'}
     function renderTransit(result,origin,destination){const plan=result.plans?.[0];if(!plan){$('routeMeta').textContent='没有找到公交 / 地铁方案。';return}const steps=[];for(const seg of plan.segments||[]){if(seg.walking?.distance)steps.push(`步行约 ${dist(seg.walking.distance)} 到乘车点`);for(const line of seg.transit?.buslines||[]){const from=line.departure_stop?.name,to=line.arrival_stop?.name;steps.push(`${line.name||'公交 / 地铁'}${from&&to?`：${from} → ${to}`:''}`)}}$('routeTitle').textContent=`${origin.name} → ${destination.name}`;$('routeMeta').textContent=`公交 / 地铁 · ${dist(plan.distance)} · ${timeText(plan.time)} · ${steps.length} 段`;$('routeSteps').innerHTML=steps.map((text,i)=>`<li class="route-step"><span class="step-num">${i+1}</span>${safe(text)}</li>`).join('')||'<li class="route-step">换乘路线已显示在地图上。</li>'}
     $('clearRoute').onclick=clearRoute;$('fitFavorites').onclick=()=>{if(markers.size)map.setFitView([...markers.values()],false,[85,70,70,70],16);else map.setZoomAndCenter(12,SHANGHAI)};
-    $('shareBtn').onclick=async()=>{const url=location.href.split('#')[0]+'#trip='+btoa(unescape(encodeURIComponent(JSON.stringify(places))));try{await navigator.clipboard.writeText(url);toast('分享链接已复制')}catch{prompt('复制分享链接：',url)}};
+    $('shareBtn').onclick=async()=>{const url=location.origin+location.pathname;try{await navigator.clipboard.writeText(url);toast('网页链接已复制，收藏只保存在你的浏览器里')}catch{prompt('复制网页链接（不会包含你的收藏）：',url)}};
     $('exportBtn').onclick=()=>{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(places,null,2)],{type:'application/json'}));a.download='上海打卡地点备份.json';a.click();URL.revokeObjectURL(a.href)};
     load();if(!window.AMAP_KEY){$('searchHint').textContent='高德地图 Key 未配置，请稍后联系维护者。';toast('高德地图配置尚未完成')}else{window._AMapSecurityConfig=window._AMapSecurityConfig||{};const script=document.createElement('script');script.src=`https://webapi.amap.com/maps?v=2.0&key=${encodeURIComponent(window.AMAP_KEY)}`;script.onload=initMap;script.onerror=()=>{$('searchHint').textContent='地图加载失败，请检查网络后刷新页面。';toast('地图加载失败')};document.head.appendChild(script)}
   })();
